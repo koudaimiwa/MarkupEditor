@@ -6,8 +6,8 @@
 //  Copyright © 2021 Steven Harris. All rights reserved.
 //
 
-import WebKit
 import OSLog
+import WebKit
 
 /// Tracks changes to a single MarkupWKWebView, updating the selectionState and informing the MarkupDelegate of what happened.
 ///
@@ -30,7 +30,7 @@ import OSLog
 /// is received by this MarkupCoordinator, it notifies the MarkupDelegate, which might want to take some other
 /// action as the focus changes, such as updating the selectedWebView.
 public class MarkupCoordinator: NSObject, WKScriptMessageHandler {
-    weak public var webView: MarkupWKWebView!
+    public weak var webView: MarkupWKWebView!
     public var markupDelegate: MarkupDelegate?
     
     public init(markupDelegate: MarkupDelegate? = nil, webView: MarkupWKWebView? = nil) {
@@ -44,10 +44,8 @@ public class MarkupCoordinator: NSObject, WKScriptMessageHandler {
     /// height so that it fills the full height of webView.
     @MainActor
     private func updateHeight() {
-        webView.updateHeight() { height in
-            self.webView.padBottom() {
-                self.markupDelegate?.markup(self.webView, heightDidChange: height)
-            }
+        webView.updateHeight { height in
+            self.markupDelegate?.markup(self.webView, heightDidChange: height)
         }
     }
     
@@ -80,36 +78,36 @@ public class MarkupCoordinator: NSObject, WKScriptMessageHandler {
         }
         switch messageBody {
         case "ready":
-            //Logger.coordinator.debug("ready")
+            // Logger.coordinator.debug("ready")
             // When the root files are properly loaded, we can load user-supplied css and js.
             // Afterward, the "loadedUserFiles" callback will be invoked. Without the separate
             // callback to "loadedUserFiles", we can end up with the functions defined by user
             // scripts to not be defined when invoked from the MarkupDelegate.markupLoaded method.
             webView.loadUserFiles()
         case "loadedUserFiles":
-            //Logger.coordinator.debug("loadedUserFiles")
+            // Logger.coordinator.debug("loadedUserFiles")
             // After the user css and js are loaded, we set the top-level "editor" attributes,
             // and load the initial HTML, which will result in the MarkupDelegate.markupLoaded call.
-            webView.setTopLevelAttributes() {
+            webView.setTopLevelAttributes {
                 webView.loadInitialHtml()
             }
         case "updateHeight":
             updateHeight()
         case "blur":
-            //Logger.coordinator.debug("* blur")
-            webView.hasFocus = false        // Track focus state so delegate can find it if needed
+            // Logger.coordinator.debug("* blur")
+            webView.hasFocus = false // Track focus state so delegate can find it if needed
             markupDelegate?.markupLostFocus(webView)
-            // TODO: Determine whether to clean up HTML or perhaps leave that to a markupDelegate
-            // For now, we clean up the HTML when we lose focus
-            //webView.cleanUpHtml() { error in
-            //    if error != nil {
-            //        Logger.coordinator.error("Error cleaning up html: \(error!.localizedDescription)")
-            //    }
-            //    self.markupDelegate?.markupLostFocus(webView)
-            //}
+        // TODO: Determine whether to clean up HTML or perhaps leave that to a markupDelegate
+        // For now, we clean up the HTML when we lose focus
+        // webView.cleanUpHtml() { error in
+        //    if error != nil {
+        //        Logger.coordinator.error("Error cleaning up html: \(error!.localizedDescription)")
+        //    }
+        //    self.markupDelegate?.markupLostFocus(webView)
+        // }
         case "focus":
-            //Logger.coordinator.debug("* focus")
-            webView.hasFocus = true         // Track focus state so delegate can find it if needed
+            // Logger.coordinator.debug("* focus")
+            webView.hasFocus = true // Track focus state so delegate can find it if needed
             // NOTE: Just because the webView here has focus does not mean it becomes the
             // selectedWebView, just like losing focus does not mean selectedWebView becomes nil.
             // Use markupDelegate.markupTookFocus to reset selectedWebView if needed, since
@@ -122,23 +120,23 @@ public class MarkupCoordinator: NSObject, WKScriptMessageHandler {
             // doing something to change selection in the WKWebView.
             // Note that selectionState remains the same object; just the state it holds onto is updated.
             if webView.hasFocus {
-                webView.getSelectionState() { selectionState in
-                    //Logger.coordinator.debug("* selectionChange")
+                webView.getSelectionState { selectionState in
+                    // Logger.coordinator.debug("* selectionChange")
                     MarkupEditor.selectionState.reset(from: selectionState)
                     self.markupDelegate?.markupSelectionChanged(webView)
                 }
-            //} else {
-            //    Logger.coordinator.debug("* ignored selection change")
+                // } else {
+                //    Logger.coordinator.debug("* ignored selection change")
             }
         case "click":
-            //Logger.coordinator.debug("click")
+            // Logger.coordinator.debug("click")
             webView.becomeFirstResponder()
             markupDelegate?.markupClicked(webView)
         case "undoSet":
-            //Logger.coordinator.debug("undoSet")
+            // Logger.coordinator.debug("undoSet")
             markupDelegate?.markupUndoSet(webView)
         case "searched":
-            webView.makeSelectionVisible()  // Scroll to what we found and selected
+            webView.makeSelectionVisible() // Scroll to what we found and selected
         case "activateSearch":
             markupDelegate?.markupActivateSearch(webView)
         case "deactivateSearch":
@@ -147,12 +145,12 @@ public class MarkupCoordinator: NSObject, WKScriptMessageHandler {
             // Try to decode a complex JSON stringified message
             if let data = messageBody.data(using: .utf8) {
                 do {
-                    if let messageData = try JSONSerialization.jsonObject(with: data, options: []) as? [String : Any] {
+                    if let messageData = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
                         receivedMessageData(messageData)
                     } else {
                         Logger.coordinator.error("Error: Decoded message data was nil")
                     }
-                } catch let error {
+                } catch {
                     Logger.coordinator.error("Error decoding message data: \(error.localizedDescription)")
                 }
             } else {
@@ -165,7 +163,7 @@ public class MarkupCoordinator: NSObject, WKScriptMessageHandler {
     /// On the JavaScript side, the messageType with string key 'messageType', and the argument has
     /// the key of the messageType.
     @MainActor
-    private func receivedMessageData(_ messageData: [String : Any]) {
+    private func receivedMessageData(_ messageData: [String: Any]) {
         guard let messageType = messageData["messageType"] as? String else {
             Logger.coordinator.error("Unknown message received: \(messageData)")
             return
@@ -194,7 +192,7 @@ public class MarkupCoordinator: NSObject, WKScriptMessageHandler {
         case "copyImage":
             guard
                 let src = messageData["src"] as? String,
-                let dimensions = messageData["dimensions"] as? [String : Int]
+                let dimensions = messageData["dimensions"] as? [String: Int]
             else {
                 Logger.coordinator.error("Src or dimensions was missing")
                 return
@@ -246,7 +244,7 @@ public class MarkupCoordinator: NSObject, WKScriptMessageHandler {
         case "buttonClicked":
             guard
                 let id = messageData["id"] as? String,
-                let rectDict = messageData["rect"] as? [String : CGFloat],
+                let rectDict = messageData["rect"] as? [String: CGFloat],
                 let rect = webView.rectFromDict(rectDict)
             else {
                 Logger.coordinator.error("Button id or rect was missing")
@@ -266,5 +264,4 @@ public class MarkupCoordinator: NSObject, WKScriptMessageHandler {
         }
         decisionHandler(.allow)
     }
-    
 }
