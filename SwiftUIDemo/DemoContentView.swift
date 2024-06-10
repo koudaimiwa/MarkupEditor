@@ -6,14 +6,14 @@
 //  Copyright © 2021 Steven Harris. All rights reserved.
 //
 
-import SwiftUI
 import MarkupEditor
+import SwiftUI
 
 /// The main view for the SwiftUIDemo.
 ///
 /// Displays the MarkupEditorView containing demo.html and a TextView to display the raw HTML that can be toggled
 /// on and off from the FileToolbar. By default, the MarkupEditorView shows the MarkupToolbar at the top.
-/// 
+///
 /// Acts as the MarkupDelegate to interact with editing operations as needed, and as the FileToolbarDelegate to interact
 /// with the FileToolbar.
 ///
@@ -23,16 +23,15 @@ import MarkupEditor
 /// `resourcesUrl` when  instantiating MarkupEditorView, so that the \<img src=...> tag can identify
 /// the `src` for the image relative to your html document.
 struct DemoContentView: View {
-
     @ObservedObject var selectImage = MarkupEditor.selectImage
     @State private var rawText = NSAttributedString(string: "")
     @State private var documentPickerShowing: Bool = false
-    @State private var rawShowing: Bool = false
+    @State private var rawShowing: Bool = true
     @State private var demoHtml: String
-    
+
     var body: some View {
         VStack(spacing: 0) {
-            MarkupEditorView(markupDelegate: self, html: $demoHtml, id: "Document")
+            MarkupEditorView(markupDelegate: self, html: $demoHtml, placeholder: "まえがき", id: "Document")
             if rawShowing {
                 VStack {
                     Divider()
@@ -53,7 +52,7 @@ struct DemoContentView: View {
         .onAppear { MarkupEditor.leftToolbar = AnyView(FileToolbar(fileToolbarDelegate: self)) }
         .onDisappear { MarkupEditor.selectedWebView = nil }
     }
-    
+
     init() {
         if let demoUrl = Bundle.main.resourceURL?.appendingPathComponent("demo.html") {
             _demoHtml = State(initialValue: (try? String(contentsOf: demoUrl)) ?? "")
@@ -61,45 +60,43 @@ struct DemoContentView: View {
             _demoHtml = State(initialValue: "")
         }
     }
-    
+
     private func setRawText(_ handler: (()->Void)? = nil) {
         MarkupEditor.selectedWebView?.getHtml { html in
             rawText = attributedString(from: html ?? "")
             handler?()
         }
     }
-    
-    private func attributedString(from string: String) -> NSAttributedString {
+
+    private func attributedString(from string: String)->NSAttributedString {
         // Return a monospaced attributed string for the rawText that is expecting to be a good dark/light mode citizen
         var attributes = [NSAttributedString.Key: AnyObject]()
         attributes[.foregroundColor] = UIColor.label
         attributes[.font] = UIFont.monospacedSystemFont(ofSize: StyleContext.P.fontSize, weight: .regular)
         return NSAttributedString(string: string, attributes: attributes)
     }
-    
+
     private func openExistingDocument(url: URL) {
         demoHtml = (try? String(contentsOf: url)) ?? ""
     }
-    
+
     private func imageSelected(url: URL) {
         guard let view = MarkupEditor.selectedWebView else { return }
         markupImageToAdd(view, url: url)
     }
-    
 }
 
 extension DemoContentView: MarkupDelegate {
-    
     func markupDidLoad(_ view: MarkupWKWebView, handler: (()->Void)?) {
         MarkupEditor.selectedWebView = view
         setRawText(handler)
     }
-    
+
     func markupInput(_ view: MarkupWKWebView) {
         // This is way too heavyweight, but it suits the purposes of the demo
         setRawText()
     }
-    
+
     /// Callback received after a local image has been added to the document.
     ///
     /// Note the URL will be to a copy of the image you identified, copied to the caches directory for the app.
@@ -108,14 +105,11 @@ extension DemoContentView: MarkupDelegate {
     func markupImageAdded(url: URL) {
         print("Image added from \(url.path)")
     }
-
-
 }
 
 extension DemoContentView: FileToolbarDelegate {
-
     func newDocument(handler: ((URL?)->Void)? = nil) {
-        MarkupEditor.selectedWebView?.emptyDocument() {
+        MarkupEditor.selectedWebView?.emptyDocument {
             setRawText()
         }
     }
@@ -125,7 +119,6 @@ extension DemoContentView: FileToolbarDelegate {
     }
 
     func rawDocument() {
-        withAnimation { rawShowing.toggle()}
+        withAnimation { rawShowing.toggle() }
     }
-
 }

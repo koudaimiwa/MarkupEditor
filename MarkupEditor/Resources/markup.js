@@ -712,7 +712,7 @@ class Undoer {
         this._ctrl = document.createElement('input');
         this._ctrl.setAttribute('aria-hidden', 'true');
         this._ctrl.setAttribute('id', 'hiddenInput');
-        this._ctrl.style.caretColor = 'blue';   // To match MU.editor as focus changes
+        this._ctrl.style.caretColor = '#007AFF';   // To match MU.editor as focus changes
         this._ctrl.style.opacity = 0;
         this._ctrl.style.position = 'fixed';
         this._ctrl.style.top = '-1000px';
@@ -8047,13 +8047,29 @@ MU.insertImage = function(src, alt, undoable=true) {
     // Track image insertion on the undo stack if necessary and hold onto the new image element's range
     // Note that the range tracked on the undo stack is not the same as the selection, which has been
     // set to make continued typing easy after inserting the image.
+    _updatePlaceholder();
+    _restoreSelection();
+    const parentP = img.closest('p');
+    const br = document.createElement('br');
+    parentP.parentNode.insertBefore(br, parentP.nextSibling);
+
+    const range = document.createRange();
+    const selection = window.getSelection();
+    range.setStartAfter(br);
+    range.setEndAfter(br);
+
+    selection.removeAllRanges();
+    selection.addRange(range);
+    _backupSelection();
+    
     if (undoable) {
         const imgRange = document.createRange();
-        imgRange.selectNode(img);
+        imgRange.selectNode(br);
         const undoerData = _undoerData('insertImage', {src: src, alt: alt}, imgRange);
         undoer.push(undoerData);
         _restoreSelection();
     };
+
     _callbackInput();
     return img;
 };
@@ -8134,9 +8150,6 @@ const _makeSelected = function(img) {
     _prepImage(img);
     if (resizableImage.isSelected) {
         resizableImage.replaceImage(img);
-    } else {
-        resizableImage.select(img);
-        _hideCaret();
     };
 };
 
@@ -8282,8 +8295,6 @@ const _prepImage = function(img) {
         img.setAttribute('height', Math.max(img.naturalHeight ?? 0, minImageSize));
         changedHTML = true;
     };
-    // For history, 'focusout' just never fires, either for image or the resizeContainer
-    img.addEventListener('focusin', _focusInImage);         // Allow resizing when focused
     // Only notify the Swift side if we modified the HTML
     if (changedHTML) {
         _callbackInput() // Because we changed the html
@@ -9353,7 +9364,7 @@ const _hideCaret = function() {
  * Show the caret (has to be restored after image selection
  */
 const _showCaret = function() {
-    MU.editor.style.caretColor = 'blue';
+    MU.editor.style.caretColor = '#007AFF';
 };
 
 /**
