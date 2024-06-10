@@ -825,7 +825,7 @@ public class MarkupWKWebView: WKWebView, ObservableObject {
         pasteboard.setItems([items])
     }
     
-    private func getHeight(_ handler: @escaping ((Int)->Void)) {
+    public func getHeight(_ handler: @escaping ((Int)->Void)) {
         evaluateJavaScript("MU.getHeight()") { result, _ in
             handler(result as? Int ?? 0)
         }
