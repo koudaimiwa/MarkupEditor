@@ -8278,10 +8278,6 @@ const _redoDeleteImage = function(undoerData) {
  */
 const _prepImage = function(img) {
     let changedHTML = false;
-    if (img.getAttribute('class') !== 'resize-image') {
-        img.setAttribute('class', 'resize-image');          // Make it resizable
-        changedHTML = true;
-    }
     if (img.getAttribute('tabindex') !== "-1") {
         img.setAttribute('tabindex', -1);                   // Make it selectable
         changedHTML = true;
