@@ -8135,13 +8135,13 @@ const _setSrc = function(img, src, divId) {
         _callback(JSON.stringify({'messageType' : 'addedImage', 'src' : src, 'divId' : (divId ?? '') }));
     });
     img.addEventListener('load', function() {
-        _makeSelected(img);
+        // _makeSelected(img);
     });
     img.addEventListener('error', function() {
        _callback(JSON.stringify({'messageType' : 'addedImage', 'src' : src, 'divId' : (divId ?? '') }));
     });
     img.addEventListener('load', function() {
-        _makeSelected(img);
+        // _makeSelected(img);
     });
     img.setAttribute('src', src);
 };
@@ -8172,13 +8172,18 @@ const _insertImageAtSelection = function(src, alt, dimensions) {
         img.setAttribute('width', dimensions.width);
         img.setAttribute('height', dimensions.height);
     }
+    // spanでimgをラップ
+    const span = document.createElement('span');
+    span.setAttribute('class', 'after-image-caret');
+    span.appendChild(img);
+    // 選択位置にspanを挿入
     const sib = _siblingAtSelection();
     if (_isBRElement(sib)) {
-        sib.replaceWith(img);
+        sib.replaceWith(span);
     } else {
-        range.insertNode(img);
+        range.insertNode(span);
     };
-    _setSrc(img, src, _selectedID)   // Initiate load/error callback and prepping of image
+    _setSrc(img, src, _selectedID);
     return img;
 };
 
@@ -8307,10 +8312,10 @@ const _prepImage = function(img) {
  * is showing where the selection is.
  */
 const _focusInImage = function(ev) {
-    const img = ev.currentTarget;
-    resizableImage.select(img);
-    _hideCaret();
-    _callbackInput()
+    // const img = ev.currentTarget;
+    // resizableImage.select(img);
+    // _hideCaret();
+    // _callbackInput()
 };
 
 /*

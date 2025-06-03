@@ -160,11 +160,20 @@ p code, h1 code, h2 code, h3 code, h4 code, h5 code, h6 code {
 }
 
 img {
-    max-width: 100%;
+    max-width: 98%;
     height: auto;
-    width: 100% !important;
+    width: 98% !important;
     display: block !important;
 }
+/* 画像直後のカーソル用span */
+.after-image-caret {
+    display: inline-block;
+    width: 100%;
+    min-width: 100%;
+    height: 100%;
+    vertical-align: middle;
+    cursor: text;
+  }
 
 /* Provide a slightly darkened or lightened overlay while search is active */
 .searching {

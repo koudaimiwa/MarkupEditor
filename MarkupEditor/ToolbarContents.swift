@@ -42,12 +42,12 @@ public class ToolbarContents {
     }
     
     public init(
-        leftToolbar: Bool = false,
-        correction: Bool = false,
+        leftToolbar: Bool = true,
+        correction: Bool = true,
         insert: Bool = true,
         style: Bool = true,
         format: Bool = true,
-        rightToolbar: Bool = false,
+        rightToolbar: Bool = true,
         insertContents: InsertContents = InsertContents(),
         styleContents: StyleContents = StyleContents(),
         formatContents: FormatContents = FormatContents(),
