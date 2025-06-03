@@ -3082,6 +3082,7 @@ MU.setHTML = function(contents, select=true) {
     };
     _updatePlaceholder()
     _callback('updateHeight');
+    _rebindImageEventListeners();
 };
 
 /**
@@ -8147,6 +8148,14 @@ const _setSrc = function(img, src, divId) {
     img.addEventListener('touchstart', _focusInImage);
     img.setAttribute('src', src);
 };
+
+const _rebindImageEventListeners = function() {
+    const imgs = document.querySelectorAll('img');
+    imgs.forEach(img => {
+        img.addEventListener('mousedown', _focusInImage);
+        img.addEventListener('touchstart', _focusInImage);
+    });
+}
 
 const _makeSelected = function(img) {
     _prepImage(img);
