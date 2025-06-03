@@ -8143,6 +8143,8 @@ const _setSrc = function(img, src, divId) {
     img.addEventListener('load', function() {
         // _makeSelected(img);
     });
+    img.addEventListener('mousedown', _focusInImage);
+    img.addEventListener('touchstart', _focusInImage);
     img.setAttribute('src', src);
 };
 
@@ -8312,10 +8314,20 @@ const _prepImage = function(img) {
  * is showing where the selection is.
  */
 const _focusInImage = function(ev) {
-    // const img = ev.currentTarget;
-    // resizableImage.select(img);
-    // _hideCaret();
-    // _callbackInput()
+    const img = ev.currentTarget;
+    // 画像直後にキャレットを移動
+    const range = document.createRange();
+    range.setStartAfter(img);
+    range.collapse(true);
+
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    // 必要ならエディタ要素に focus() する（ただし現状のままでもOKな場合が多い）
+    // editor.focus();
+
+    _callbackInput();
 };
 
 /*
